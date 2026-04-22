@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mis Finanzas" />
+  <title>Mis Finanzas</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'DM Mono', 'Courier New', monospace;
+      color: #e2e8f0;
+      padding: env(safe-area-inset-top, 1rem) 1rem env(safe-area-inset-bottom, 1rem);
+    }
+    .header { text-align: center; padding: 2rem 0 1.5rem; }
+    .header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 7vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(90deg, #f093fb, #f5576c, #fda085);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p { color: #94a3b8; font-size: 0.75rem; margin-top: 0.4rem; letter-spacing: 0.1em; }
+    .saldo-setup { max-width: 420px; margin: 0 auto 1.5rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.5rem; text-align: center; }
+    .saldo-setup p { font-size: 0.75rem; letter-spacing: 0.12em; color: #94a3b8; margin-bottom: 1rem; }
+    .saldo-info { max-width: 900px; margin: 0 auto 0.5rem; text-align: right; font-size: 0.75rem; color: #64748b; letter-spacing: 0.08em; }
+    .saldo-info button { background: none; border: none; color: #f5576c; cursor: pointer; margin-left: 0.5rem; font-size: 0.75rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 0 auto; }
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .card.credit { border-top: 3px solid #f5576c; }
+    .card.debit  { border-top: 3px solid #10b981; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: #f1f5f9; display: flex; align-items: center; gap: 0.5rem; }
+    .card-subtitle { color: #64748b; font-size: 0.72rem; margin-top: 0.2rem; letter-spacing: 0.08em; }
+    input[type="text"], input[type="number"] { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.55rem 0.75rem; color: #e2e8f0; font-size: 0.82rem; font-family: inherit; outline: none; width: 100%; }
+    .input-row { display: flex; flex-direction: column; gap: 0.5rem; }
+    .input-group { display: flex; gap: 0.5rem; }
+    .input-group input { flex: 1; }
+    .btn { border: none; border-radius: 8px; padding: 0.55rem 1rem; color: #fff; font-family: inherit; font-size: 0.8rem; font-weight: 500; cursor: pointer; white-space: nowrap; letter-spacing: 0.03em; }
+    .btn-credit { background: #f5576c; }
+    .btn-debit  { background: #10b981; }
+    .btn-green  { background: #10b981; }
+    .items-list { display: flex; flex-direction: column; gap: 0.4rem; max-height: 220px; overflow-y: auto; }
+    .item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+    .item-desc { color: #cbd5e1; flex: 1; }
+    .item-amount-credit { color: #f5576c; font-weight: 500; margin-right: 0.75rem; }
+    .item-amount-debit  { color: #10b981; font-weight: 500; margin-right: 0.75rem; }
+    .item-remove { background: none; border: none; color: #475569; cursor: pointer; font-size: 1.1rem; line-height: 1; }
+    .empty { color: #475569; font-size: 0.78rem; text-align: center; padding: 0.5rem 0; }
+    .total-row { display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem; font-size: 0.85rem; }
+    .total-label { color: #94a3b8; letter-spacing: 0.05em; }
+    .total-credit { color: #f5576c; }
+    .total-debit  { color: #f59e0b; }
+    .total-available { color: #10b981; font-weight: 700; font-size: 1rem; }
+    .resultado { max-width: 900px; margin: 2rem auto 2rem; border-radius: 20px; padding: 2rem; text-align: center; }
+    .resultado.ok  { background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04)); border: 1px solid rgba(16,185,129,0.35); }
+    .resultado.no  { background: linear-gradient(135deg, rgba(245,87,108,0.12), rgba(245,87,108,0.04)); border: 1px solid rgba(245,87,108,0.35); }
+    .resultado-emoji { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .resultado h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; }
+    .resultado.ok h2 { color: #10b981; }
+    .resultado.no h2 { color: #f5576c; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1.2rem; }
+    .stat-box { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 1rem; }
+    .stat-label { color: #64748b; font-size: 0.68rem; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+    .stat-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; }
+    .stat-green  { color: #10b981; }
+    .stat-red    { color: #f5576c; }
+    .resultado p.sobra { color: #64748b; font-size: 0.78rem; margin-top: 1rem; letter-spacing: 0.05em; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Control de Finanzas</h1>
+    <p>CRÉDITO · DÉBITO · PROYECCIÓN MENSUAL</p>
+  </div>
+  <div class="saldo-setup" id="saldo-setup">
+    <p>¿CUÁNTO TIENES EN TU CUENTA DÉBITO?</p>
+    <div class="input-group">
+      <input type="number" id="saldo-input" placeholder="Ej: 500000" />
+      <button class="btn btn-green" onclick="setSaldo()">Ingresar</button>
+    </div>
+  </div>
+  <div class="saldo-info hidden" id="saldo-info">
+    <span id="saldo-display"></span>
+    <button onclick="editSaldo()">✎ Editar</button>
+  </div>
+  <div class="grid">
+    <div class="card credit">
+      <div>
+        <div class="card-title">💳 Cuenta Crédito</div>
+        <div class="card-subtitle">Gastos que deberás pagar</div>
+      </div>
+      <div class="input-row">
+        <input type="text" id="credit-desc" placeholder="Descripción" />
+        <div class="input-group">
+          <input type="number" id="credit-amount" placeholder="Monto $" />
+          <button class="btn btn-credit" onclick="addCredit()">+ Agregar</button>
+        </div>
+      </div>
+      <div class="items-list" id="credit-list">
+        <div class="empty" id="credit-empty">Sin movimientos aún</div>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Total a pagar</span>
+        <span class="total-credit" id="credit-total">$0</span>
+      </div>
+    </div>
+    <div class="card debit">
+      <div>
+        <div class="card-title">🏦 Cuenta Débito</div>
+        <div class="card-subtitle">Gastos con débito este mes</div>
+      </div>
+      <div class="input-row">
+        <input type="text" id="debit-desc" placeholder="Descripción" />
+        <div class="input-group">
+          <input type="number" id="debit-amount" placeholder="Monto $" />
+          <button class="btn btn-debit" onclick="addDebit()">+ Agregar</button>
+        </div>
+      </div>
+      <div class="items-list" id="debit-list">
+        <div class="empty" id="debit-empty">Sin movimientos aún</div>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Total gastado débito</span>
+        <span class="total-debit" id="debit-total">$0</span>
+      </div>
+      <div class="total-row hidden" id="disponible-row">
+        <span class="total-label">Saldo disponible</span>
+        <span class="total-available" id="debit-disponible">$0</span>
+      </div>
+    </div>
+  </div>
+  <div class="resultado hidden" id="resultado">
+    <div class="resultado-emoji" id="res-emoji"></div>
+    <h2 id="res-title"></h2>
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-label">DEUDA CRÉDITO</div>
+        <div class="stat-value stat-red" id="res-credit"></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">DISPONIBLE DÉBITO</div>
+        <div class="stat-value stat-green" id="res-debit"></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">DIFERENCIA</div>
+        <div class="stat-value" id="res-diff"></div>
+      </div>
+    </div>
+    <p class="sobra hidden" id="res-sobra"></p>
+    <button class="btn" style="margin-top: 20px; background: #475569;" onclick="clearAll()">Reiniciar Mes</button>
+  </div>
+  <script>
+    const fmt = (n) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+    const num = (n) => new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 }).format(n);
+    let saldoDebito = parseFloat(localStorage.getItem('saldoDebito')) || 0;
+    let creditItems = JSON.parse(localStorage.getItem('creditItems')) || [];
+    let debitItems = JSON.parse(localStorage.getItem('debitItems')) || [];
+    window.onload = () => {
+      if (saldoDebito > 0) showSaldoInfo();
+      renderCredit();
+      renderDebit();
+      update();
+    };
+    function saveData() {
+      localStorage.setItem('saldoDebito', saldoDebito);
+      localStorage.setItem('creditItems', JSON.stringify(creditItems));
+      localStorage.setItem('debitItems', JSON.stringify(debitItems));
+    }
+    function setSaldo() {
+      const val = parseFloat(document.getElementById('saldo-input').value);
+      if (isNaN(val) || val <= 0) return;
+      saldoDebito = val;
+      showSaldoInfo();
+      saveData();
+      update();
+    }
+    function showSaldoInfo() {
+      document.getElementById('saldo-setup').classList.add('hidden');
+      document.getElementById('saldo-info').classList.remove('hidden');
+      document.getElementById('saldo-display').textContent = 'SALDO INICIAL DÉBITO: ' + fmt(saldoDebito);
+      document.getElementById('disponible-row').classList.remove('hidden');
+    }
+    function editSaldo() {
+      document.getElementById('saldo-setup').classList.remove('hidden');
+      document.getElementById('saldo-info').classList.add('hidden');
+      document.getElementById('disponible-row').classList.add('hidden');
+      document.getElementById('resultado').classList.add('hidden');
+      document.getElementById('saldo-input').value = saldoDebito;
+    }
+    function addCredit() {
+      const desc = document.getElementById('credit-desc').value.trim();
+      const amt = parseFloat(document.getElementById('credit-amount').value);
+      if (!desc || isNaN(amt) || amt <= 0) return;
+      creditItems.push({ id: Date.now(), desc, amount: amt });
+      document.getElementById('credit-desc').value = '';
+      document.getElementById('credit-amount').value = '';
+      renderCredit();
+      saveData();
+      update();
+    }
+    function addDebit() {
+      const desc = document.getElementById('debit-desc').value.trim();
+      const amt = parseFloat(document.getElementById('debit-amount').value);
+      if (!desc || isNaN(amt) || amt <= 0) return;
+      debitItems.push({ id: Date.now(), desc, amount: amt });
+      document.getElementById('debit-desc').value = '';
+      document.getElementById('debit-amount').value = '';
+      renderDebit();
+      saveData();
+      update();
+    }
+    function removeCredit(id) {
+      creditItems = creditItems.filter(i => i.id !== id);
+      renderCredit();
+      saveData();
+      update();
+    }
+    function removeDebit(id) {
+      debitItems = debitItems.filter(i => i.id !== id);
+      renderDebit();
+      saveData();
+      update();
+    }
+    function clearAll() {
+      if(confirm("¿Estás seguro de que quieres borrar todos los datos del mes?")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+    function renderCredit() {
+      const list = document.getElementById('credit-list');
+      const empty = document.getElementById('credit-empty');
+      const existing = list.querySelectorAll('.item');
+      existing.forEach(e => e.remove());
+      if (creditItems.length === 0) { empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+      creditItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<span class="item-desc">${item.desc}</span><span class="item-amount-credit">${num(item.amount)}</span><button class="item-remove" onclick="removeCredit(${item.id})">×</button>`;
+        list.appendChild(div);
+      });
+    }
+    function renderDebit() {
+      const list = document.getElementById('debit-list');
+      const empty = document.getElementById('debit-empty');
+      const existing = list.querySelectorAll('.item');
+      existing.forEach(e => e.remove());
+      if (debitItems.length === 0) { empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+      debitItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<span class="item-desc">${item.desc}</span><span class="item-amount-debit">${num(item.amount)}</span><button class="item-remove" onclick="removeDebit(${item.id})">×</button>`;
+        list.appendChild(div);
+      });
+    }
+    function update() {
+      const totalCredit = creditItems.reduce((s, i) => s + i.amount, 0);
+      const totalDebitSpent = debitItems.reduce((s, i) => s + i.amount, 0);
+      const disponible = saldoDebito - totalDebitSpent;
+      document.getElementById('credit-total').textContent = fmt(totalCredit);
+      document.getElementById('debit-total').textContent = fmt(totalDebitSpent);
+      document.getElementById('debit-disponible').textContent = fmt(disponible);
+      if (saldoDebito <= 0 && creditItems.length === 0 && debitItems.length === 0) return;
+      const res = document.getElementById('resultado');
+      res.classList.remove('hidden', 'ok', 'no');
+      const canPay = disponible >= totalCredit;
+      res.classList.add(canPay ? 'ok' : 'no');
+      document.getElementById('res-emoji').textContent = canPay ? '✅' : '⚠️';
+      document.getElementById('res-title').textContent = canPay ? '¡Podrás pagar tu tarjeta!' : 'Fondos insuficientes';
+      document.getElementById('res-credit').textContent = fmt(totalCredit);
+      document.getElementById('res-debit').textContent = fmt(disponible);
+      const diff = disponible - totalCredit;
+      const diffEl = document.getElementById('res-diff');
+      diffEl.textContent = fmt(diff);
+      diffEl.className = 'stat-value ' + (diff >= 0 ? 'stat-green' : 'stat-red');
+      const sobra = document.getElementById('res-sobra');
+      if (canPay && diff > 0) {
+        sobra.classList.remove('hidden');
+        sobra.textContent = 'Te sobrarán ' + fmt(diff) + ' tras pagar el crédito';
+      } else { sobra.classList.add('hidden'); }
+    }
+    document.getElementById('saldo-input').addEventListener('keydown', e => e.key === 'Enter' && setSaldo());
+    document.getElementById('credit-amount').addEventListener('keydown', e => e.key === 'Enter' && addCredit());
+    document.getElementById('debit-amount').addEventListener('keydown', e => e.key === 'Enter' && addDebit());
+  </script>
+</body>
+</html>
